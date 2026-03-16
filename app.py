@@ -27,59 +27,45 @@ st.set_page_config(
 
 
 def apply_app_styles() -> None:
-    """Apply lightweight styling to give the app a more polished product feel."""
+    """Apply theme-aware styling while keeping Streamlit defaults readable."""
     st.markdown(
         """
         <style>
-        .stApp {
-            background: linear-gradient(180deg, #f6f8fb 0%, #ffffff 22%);
-        }
         .block-container {
             padding-top: 2rem;
             padding-bottom: 2rem;
             max-width: 1200px;
-        }
-        [data-testid="stSidebar"] {
-            background: #f7f9fc;
-            border-right: 1px solid rgba(15, 23, 42, 0.08);
-        }
-        .app-panel {
-            background: #ffffff;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            border-radius: 18px;
-            padding: 1.25rem 1.25rem 1rem 1.25rem;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
-            margin-bottom: 1rem;
         }
         .section-label {
             font-size: 0.82rem;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: #3b5ccc;
+            color: var(--primary-color);
             margin-bottom: 0.35rem;
         }
         .hero-card {
-            background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
-            border: 1px solid rgba(59, 92, 204, 0.12);
+            background: var(--secondary-background-color);
+            border: 1px solid var(--secondary-background-color);
             border-radius: 22px;
             padding: 1.4rem 1.5rem 1.1rem 1.5rem;
-            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
             margin-bottom: 1rem;
         }
         .hero-title {
             font-size: 2rem;
             font-weight: 700;
-            color: #0f172a;
+            color: var(--text-color);
             margin-bottom: 0.2rem;
         }
         .hero-subtitle {
             font-size: 1rem;
-            color: #334155;
+            color: var(--text-color);
+            opacity: 0.9;
             margin-bottom: 0.7rem;
         }
         .helper-text {
-            color: #475569;
+            color: var(--text-color);
+            opacity: 0.78;
             font-size: 0.95rem;
             line-height: 1.5;
         }
@@ -178,19 +164,30 @@ def render_copy_button(prompt: str) -> None:
     escaped_prompt = prompt.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
     components.html(
         f"""
+        <style>
+        html, body {{
+          margin: 0;
+          padding: 0;
+          background: transparent;
+          color-scheme: light dark;
+          font-family: sans-serif;
+        }}
+        .copy-button {{
+          width: 100%;
+          padding: 0.5rem 0.75rem;
+          border-radius: 0.5rem;
+          border: 1px solid ButtonBorder;
+          background: ButtonFace;
+          color: ButtonText;
+          cursor: pointer;
+          font-size: 0.95rem;
+          font-weight: 600;
+        }}
+        </style>
         <div style="display: grid;">
           <button
+            class="copy-button"
             onclick="navigator.clipboard.writeText(`{escaped_prompt}`)"
-            style="
-              width: 100%;
-              padding: 0.5rem 0.75rem;
-              border-radius: 0.5rem;
-              border: 1px solid rgba(49, 51, 63, 0.2);
-              background: white;
-              cursor: pointer;
-              font-size: 0.95rem;
-              font-weight: 600;
-            "
           >
             Copy Prompt
           </button>
