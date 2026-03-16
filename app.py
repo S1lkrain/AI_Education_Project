@@ -140,15 +140,19 @@ def render_output(prompt: str, filename: str) -> None:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Save Prompt", use_container_width=True):
+                prompt_title_value = st.session_state.get("prompt_title_input", "").strip()
+                prompt_content_value = st.session_state.get("prompt_content_input", "")
                 current_prompt = st.session_state.get("current_prompt_data", {}).copy()
-                current_prompt["title"] = prompt_title.strip()
-                current_prompt["prompt"] = prompt_content
-                if not prompt_title.strip():
-                    st.warning("Enter a prompt title before saving.")
+                current_prompt["title"] = prompt_title_value
+                current_prompt["prompt"] = prompt_content_value
+                if not prompt_title_value:
+                    st.warning("Please enter a prompt title before saving.")
                 elif save_prompt_to_library(current_prompt):
-                    st.success(f'Saved "{prompt_title.strip()}" to the Prompt Library.')
+                    st.session_state["current_prompt_data"] = current_prompt
+                    st.session_state["library_selected_title"] = prompt_title_value
+                    st.success(f'Saved "{prompt_title_value}" to the Prompt Library.')
                 else:
-                    st.warning("A prompt with that title already exists. Choose a different title.")
+                    st.warning("A prompt with this title already exists.")
 
         with col2:
             render_copy_button(prompt_content)
