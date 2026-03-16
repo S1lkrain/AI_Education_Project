@@ -49,7 +49,7 @@ def save_prompt_to_library(prompt_data: dict[str, Any]) -> bool:
     return True
 
 
-def delete_prompt(title: str) -> bool:
+def delete_library_prompt(title: str) -> bool:
     """Delete a saved prompt by title. Returns True when a prompt is removed."""
     normalized_title = title.strip().lower()
     library = load_prompt_library()
@@ -62,6 +62,15 @@ def delete_prompt(title: str) -> bool:
     return True
 
 
-def get_prompt_list() -> list[str]:
+def get_library_prompts() -> list[str]:
     """Return saved prompt titles for sidebar display."""
     return [item.get("title", "Untitled Prompt") for item in load_prompt_library()]
+
+
+# Backward-compatible aliases for the existing app code.
+def delete_prompt(title: str) -> bool:
+    return delete_library_prompt(title)
+
+
+def get_prompt_list() -> list[str]:
+    return get_library_prompts()

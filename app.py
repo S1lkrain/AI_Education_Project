@@ -15,7 +15,19 @@ from templates.grading_generator import GRADING_TEMPLATE
 from templates.lesson_explainer import LESSON_EXPLAINER_TEMPLATE
 from templates.question_generator import QUESTION_GENERATOR_TEMPLATE
 from templates.quiz_generator import QUIZ_GENERATOR_TEMPLATE
-from utils.prompt_library import delete_prompt, get_prompt_list, load_prompt_library, save_prompt_to_library
+from utils.prompt_history import (
+    add_prompt_to_history,
+    clear_prompt_history,
+    delete_history_prompt,
+    get_history_prompts,
+    load_prompt_history,
+)
+from utils.prompt_library import (
+    delete_library_prompt,
+    get_library_prompts,
+    load_prompt_library,
+    save_prompt_to_library,
+)
 from utils.prompt_builder import build_prompt
 
 
@@ -197,69 +209,135 @@ def render_copy_button(prompt: str) -> None:
     )
 
 
-def set_current_prompt(prompt_data: dict[str, str], filename: str) -> None:
-    """Store the active prompt in session state for reuse across the app."""
+def set_current_prompt(prompt_data: dict[str, str], filename: str, add_to_history: bool = False) -> None:
+    """Store the active prompt in session state and optionally add it to recent history."""
     st.session_state["current_prompt_data"] = prompt_data
     st.session_state["current_prompt_filename"] = filename
     st.session_state["prompt_title_input"] = prompt_data.get("title", "")
+    if add_to_history:
+        add_prompt_to_history(prompt_data)
 
 
-def render_prompt_library() -> None:
-    """Render the sidebar prompt library with load and delete controls."""
+def render_prompt_manager() -> None:
+    """Render the sidebar prompt manager with library and recent history."""
     with st.sidebar:
-        st.header("Prompt Library")
-        st.caption("Save and reuse your generated prompts.")
         st.markdown("---")
-        prompt_titles = get_prompt_list()
+        st.header("Prompt Manager")
+        st.caption("Save, revisit, and reuse your generated prompts.")
+        st.markdown("---")
 
-        if not prompt_titles:
+        st.markdown("**Prompt Library**")
+        library_titles = get_library_prompts()
+
+        if not library_titles:
             st.caption("No saved prompts yet.")
+        else:
+            selected_title = st.selectbox("Saved prompts", library_titles, key="library_selected_title")
+            selected_prompt = next(
+                (item for item in load_prompt_library() if item.get("title") == selected_title),
+                None,
+            )
+
+            if selected_prompt:
+                st.markdown(f"**{selected_prompt['title']}**")
+                st.caption(
+                    " | ".join(
+                        value
+                        for value in [
+                            selected_prompt.get("subject", ""),
+                            selected_prompt.get("grade", ""),
+                            selected_prompt.get("difficulty", ""),
+                        ]
+                        if value
+                    )
+                )
+                st.text_area(
+                    "Saved prompt content",
+                    selected_prompt.get("prompt", ""),
+                    height=160,
+                    disabled=True,
+                    key="library_prompt_content",
+                )
+
+                load_col, delete_col = st.columns(2)
+                with load_col:
+                    if st.button("Load Prompt", use_container_width=True, key="load_library_prompt"):
+                        set_current_prompt(selected_prompt, "saved_prompt.txt")
+                        st.success(f'Loaded "{selected_prompt["title"]}".')
+
+                with delete_col:
+                    if st.button("Delete Prompt", use_container_width=True, key="delete_library_prompt"):
+                        if delete_library_prompt(selected_prompt["title"]):
+                            if st.session_state.get("current_prompt_data", {}).get("title") == selected_prompt["title"]:
+                                st.session_state.pop("current_prompt_data", None)
+                                st.session_state.pop("current_prompt_filename", None)
+                                st.session_state["prompt_title_input"] = ""
+                            st.success(f'Deleted "{selected_prompt["title"]}".')
+                            st.rerun()
+
+        st.markdown("---")
+        st.markdown("**Recent History**")
+        history_labels = get_history_prompts()
+
+        if not history_labels:
+            st.caption("No recent history yet.")
             return
 
-        selected_title = st.selectbox("Saved Prompts", prompt_titles, key="library_selected_title")
-        selected_prompt = next(
-            (item for item in load_prompt_library() if item.get("title") == selected_title),
+        selected_label = st.selectbox("Recent prompts", history_labels, key="history_selected_label")
+        selected_history_item = next(
+            (item for item in load_prompt_history() if item.get("label") == selected_label),
             None,
         )
 
-        if not selected_prompt:
-            st.caption("Select a saved prompt to preview it.")
+        if not selected_history_item:
+            st.caption("Select a history item to preview it.")
             return
 
-        st.markdown(f"**{selected_prompt['title']}**")
+        st.markdown(f"**{selected_history_item['label']}**")
         st.caption(
             " | ".join(
                 value
                 for value in [
-                    selected_prompt.get("subject", ""),
-                    selected_prompt.get("grade", ""),
-                    selected_prompt.get("difficulty", ""),
+                    selected_history_item.get("subject", ""),
+                    selected_history_item.get("grade", ""),
+                    selected_history_item.get("difficulty", ""),
                 ]
                 if value
             )
         )
         st.text_area(
-            "Prompt Content",
-            selected_prompt.get("prompt", ""),
-            height=180,
+            "History prompt content",
+            selected_history_item.get("prompt", ""),
+            height=160,
             disabled=True,
+            key="history_prompt_content",
         )
 
         load_col, delete_col = st.columns(2)
         with load_col:
-            if st.button("Load Prompt", use_container_width=True):
-                set_current_prompt(selected_prompt, "saved_prompt.txt")
-                st.success(f'Loaded "{selected_prompt["title"]}".')
+            if st.button("Load Recent", use_container_width=True, key="load_history_prompt"):
+                history_prompt = {
+                    "title": "",
+                    "subject": selected_history_item.get("subject", ""),
+                    "grade": selected_history_item.get("grade", ""),
+                    "difficulty": selected_history_item.get("difficulty", ""),
+                    "question_type": selected_history_item.get("question_type", ""),
+                    "prompt": selected_history_item.get("prompt", ""),
+                    "task_type": selected_history_item.get("task_type", ""),
+                }
+                set_current_prompt(history_prompt, "recent_prompt.txt")
+                st.success("Loaded the selected history prompt.")
 
         with delete_col:
-            if st.button("Delete Prompt", use_container_width=True):
-                if delete_prompt(selected_prompt["title"]):
-                    if st.session_state.get("current_prompt_data", {}).get("title") == selected_prompt["title"]:
-                        st.session_state.pop("current_prompt_data", None)
-                        st.session_state.pop("current_prompt_filename", None)
-                        st.session_state["prompt_title_input"] = ""
-                    st.success(f'Deleted "{selected_prompt["title"]}".')
+            if st.button("Delete Recent", use_container_width=True, key="delete_history_prompt"):
+                if delete_history_prompt(selected_history_item["label"]):
+                    st.success("Deleted the selected history item.")
                     st.rerun()
+
+        if st.button("Clear History", use_container_width=True, key="clear_prompt_history"):
+            clear_prompt_history()
+            st.success("Cleared recent prompt history.")
+            st.rerun()
 
 
 def practice_questions_tool() -> None:
@@ -300,6 +378,7 @@ def practice_questions_tool() -> None:
         set_current_prompt(
             {
                 "title": "",
+                "task_type": "Practice Questions",
                 "subject": subject,
                 "grade": grade_level,
                 "difficulty": difficulty,
@@ -307,6 +386,7 @@ def practice_questions_tool() -> None:
                 "prompt": prompt,
             },
             "practice_questions_prompt.txt",
+            add_to_history=True,
         )
 
 
@@ -348,6 +428,7 @@ def create_quiz_tool() -> None:
         set_current_prompt(
             {
                 "title": "",
+                "task_type": "Quiz",
                 "subject": subject,
                 "grade": grade_level,
                 "difficulty": difficulty,
@@ -355,6 +436,7 @@ def create_quiz_tool() -> None:
                 "prompt": prompt,
             },
             "quiz_prompt.txt",
+            add_to_history=True,
         )
 
 
@@ -393,6 +475,7 @@ def grade_student_answers_tool() -> None:
         set_current_prompt(
             {
                 "title": "",
+                "task_type": "Grading",
                 "subject": subject,
                 "grade": grade_level,
                 "difficulty": "",
@@ -400,6 +483,7 @@ def grade_student_answers_tool() -> None:
                 "prompt": prompt,
             },
             "grading_prompt.txt",
+            add_to_history=True,
         )
 
 
@@ -432,6 +516,7 @@ def lesson_explanation_tool() -> None:
         set_current_prompt(
             {
                 "title": "",
+                "task_type": "Lesson Explanation",
                 "subject": subject,
                 "grade": grade_level,
                 "difficulty": explanation_style,
@@ -439,6 +524,7 @@ def lesson_explanation_tool() -> None:
                 "prompt": prompt,
             },
             "lesson_explanation_prompt.txt",
+            add_to_history=True,
         )
 
 
@@ -479,6 +565,7 @@ def student_feedback_tool() -> None:
         set_current_prompt(
             {
                 "title": "",
+                "task_type": "Student Feedback",
                 "subject": subject,
                 "grade": "",
                 "difficulty": tone,
@@ -486,6 +573,7 @@ def student_feedback_tool() -> None:
                 "prompt": prompt,
             },
             "student_feedback_prompt.txt",
+            add_to_history=True,
         )
 
 
@@ -515,7 +603,7 @@ def main() -> None:
         st.caption("Choose the type of teaching prompt you want to create.")
         selected_tool = st.radio("Choose a tool", TOOLS, label_visibility="collapsed")
 
-    render_prompt_library()
+    render_prompt_manager()
     TOOL_RENDERERS[selected_tool]()
 
     current_prompt = st.session_state.get("current_prompt_data", {})
