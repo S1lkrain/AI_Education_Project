@@ -116,7 +116,6 @@ def render_header() -> None:
 def render_output(prompt: str, filename: str) -> None:
     """Display the generated prompt and its follow-up actions in clear sections."""
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Generated Prompt",
             "Generated Prompt",
@@ -130,10 +129,8 @@ def render_output(prompt: str, filename: str) -> None:
             disabled=True,
             label_visibility="collapsed",
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Actions",
             "Prompt Actions",
@@ -174,7 +171,6 @@ def render_output(prompt: str, filename: str) -> None:
             mime="text/plain",
             use_container_width=True,
         )
-        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_copy_button(prompt: str) -> None:
@@ -271,7 +267,6 @@ def render_prompt_library() -> None:
 
 def practice_questions_tool() -> None:
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Teaching Task Setup",
             "Generate Practice Questions",
@@ -293,7 +288,6 @@ def practice_questions_tool() -> None:
                 placeholder="Include standards, vocabulary, examples, or formatting requirements.",
             )
             submitted = st.form_submit_button("Generate Prompt", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         prompt = build_prompt(
@@ -321,7 +315,6 @@ def practice_questions_tool() -> None:
 
 def create_quiz_tool() -> None:
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Teaching Task Setup",
             "Create Quiz",
@@ -343,7 +336,6 @@ def create_quiz_tool() -> None:
                     default=[QUESTION_TYPES[0]],
                 )
             submitted = st.form_submit_button("Generate Prompt", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         selected_question_types = ", ".join(question_types) if question_types else "multiple choice"
@@ -371,7 +363,6 @@ def create_quiz_tool() -> None:
 
 def grade_student_answers_tool() -> None:
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Teaching Task Setup",
             "Grade Student Answers",
@@ -392,7 +383,6 @@ def grade_student_answers_tool() -> None:
                 placeholder="Paste the student's response here.",
             )
             submitted = st.form_submit_button("Generate Prompt", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         prompt = build_prompt(
@@ -418,7 +408,6 @@ def grade_student_answers_tool() -> None:
 
 def lesson_explanation_tool() -> None:
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Teaching Task Setup",
             "Generate Lesson Explanation",
@@ -434,7 +423,6 @@ def lesson_explanation_tool() -> None:
                 explanation_style = st.selectbox("Explanation style", EXPLANATION_STYLES)
                 topic = st.text_input("Topic", key="lesson_topic")
             submitted = st.form_submit_button("Generate Prompt", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         prompt = build_prompt(
@@ -459,7 +447,6 @@ def lesson_explanation_tool() -> None:
 
 def student_feedback_tool() -> None:
     with st.container():
-        st.markdown('<div class="app-panel">', unsafe_allow_html=True)
         render_section_shell(
             "Teaching Task Setup",
             "Write Student Feedback",
@@ -481,7 +468,6 @@ def student_feedback_tool() -> None:
             strengths = st.text_area("Strengths", placeholder="List the student's strengths.")
             weaknesses = st.text_area("Growth areas", placeholder="List the student's growth areas.")
             submitted = st.form_submit_button("Generate Prompt", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         prompt = build_prompt(
