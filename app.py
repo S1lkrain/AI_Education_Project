@@ -119,13 +119,15 @@ def render_output(prompt: str, filename: str) -> None:
             "Generated Prompt",
             "Review, save, and reuse this prompt in your preferred AI tool.",
         )
-        prompt_title = st.text_input("Prompt title", key="prompt_title_input", placeholder="Example: Algebra Quiz")
-        st.text_area(
+        prompt_title = st.text_input(
+            "Prompt title",
+            key="prompt_title_input",
+            placeholder="Example: Algebra Quiz",
+        )
+        prompt_content = st.text_area(
             "Prompt content",
-            value=prompt,
+            key="prompt_content_input",
             height=320,
-            disabled=True,
-            label_visibility="collapsed",
         )
 
     with st.container():
@@ -140,6 +142,7 @@ def render_output(prompt: str, filename: str) -> None:
             if st.button("Save Prompt", use_container_width=True):
                 current_prompt = st.session_state.get("current_prompt_data", {}).copy()
                 current_prompt["title"] = prompt_title.strip()
+                current_prompt["prompt"] = prompt_content
                 if not prompt_title.strip():
                     st.warning("Enter a prompt title before saving.")
                 elif save_prompt_to_library(current_prompt):
@@ -148,7 +151,7 @@ def render_output(prompt: str, filename: str) -> None:
                     st.warning("A prompt with that title already exists. Choose a different title.")
 
         with col2:
-            render_copy_button(prompt)
+            render_copy_button(prompt_content)
 
         st.markdown("---")
         st.markdown("**Send to AI**")
@@ -164,7 +167,7 @@ def render_output(prompt: str, filename: str) -> None:
         st.markdown("---")
         st.download_button(
             label="Download Prompt",
-            data=prompt,
+            data=prompt_content,
             file_name=filename,
             mime="text/plain",
             use_container_width=True,
@@ -214,6 +217,7 @@ def set_current_prompt(prompt_data: dict[str, str], filename: str, add_to_histor
     st.session_state["current_prompt_data"] = prompt_data
     st.session_state["current_prompt_filename"] = filename
     st.session_state["prompt_title_input"] = prompt_data.get("title", "")
+    st.session_state["prompt_content_input"] = prompt_data.get("prompt", "")
     if add_to_history:
         add_prompt_to_history(prompt_data)
 
@@ -593,6 +597,8 @@ def main() -> None:
         st.session_state["current_prompt_filename"] = "generated_prompt.txt"
     if "prompt_title_input" not in st.session_state:
         st.session_state["prompt_title_input"] = ""
+    if "prompt_content_input" not in st.session_state:
+        st.session_state["prompt_content_input"] = ""
 
     apply_app_styles()
 
