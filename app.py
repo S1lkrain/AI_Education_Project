@@ -28,6 +28,15 @@ def render_output(prompt: str, filename: str) -> None:
     """Display the generated prompt and offer a text download."""
     st.subheader("Generated Prompt")
     st.code(prompt, language="text")
+    st.divider()
+    st.markdown("**Send to AI**")
+    chatgpt_col, claude_col, gemini_col = st.columns(3)
+    with chatgpt_col:
+        st.link_button("Open in ChatGPT", "https://chat.openai.com", use_container_width=True)
+    with claude_col:
+        st.link_button("Open in Claude", "https://claude.ai", use_container_width=True)
+    with gemini_col:
+        st.link_button("Open in Gemini", "https://gemini.google.com", use_container_width=True)
     st.download_button(
         label="Download Prompt",
         data=prompt,
