@@ -32,7 +32,7 @@ def render_output(prompt: str, filename: str) -> None:
     st.code(prompt, language="text")
     prompt_title = st.text_input("Prompt title", key="prompt_title_input", placeholder="Example: Algebra Quiz")
 
-    save_col, copy_col, chatgpt_col = st.columns(3)
+    save_col, copy_col = st.columns(2)
     with save_col:
         if st.button("Save Prompt", use_container_width=True):
             current_prompt = st.session_state.get("current_prompt_data", {}).copy()
@@ -47,11 +47,10 @@ def render_output(prompt: str, filename: str) -> None:
     with copy_col:
         render_copy_button(prompt)
 
+    st.markdown("**Send to AI**")
+    chatgpt_col, claude_col, gemini_col = st.columns(3)
     with chatgpt_col:
         st.link_button("Open ChatGPT", "https://chat.openai.com", use_container_width=True)
-
-    st.markdown("**Send to AI**")
-    claude_col, gemini_col = st.columns(2)
     with claude_col:
         st.link_button("Open in Claude", "https://claude.ai", use_container_width=True)
     with gemini_col:
